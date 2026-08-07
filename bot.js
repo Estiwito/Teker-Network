@@ -13,19 +13,21 @@ export default async function handler(req, res) {
   const chatId = message.chat.id;
   const text = message.text.trim();
 
-  // Comando /start
+  // 1. Comando /start
   if (text.startsWith('/start')) {
     const responseText = 
       "👑 *Bienvenido a Teker Network*\n\n" +
       "Para consultar tu estatus y saldo, envía tu correo registrado usando:\n" +
       "`/mi_rango tu_email@ejemplo.com`\n\n" +
+      "Para analizar un producto para compras comunitarias, usa:\n" +
+      "`/sugerir Nombre del producto`\n\n" +
       "Si aún no te has unido, regístrate en nuestra web por 1€.";
     
     await sendTelegramMessage(chatId, responseText);
   }
 
-  // Comando /mi_rango
-  if (text.startsWith('/mi_rango')) {
+  // 2. Comando /mi_rango <email>
+  else if (text.startsWith('/mi_rango')) {
     const email = text.split(' ')[1];
 
     if (!email) {
@@ -48,9 +50,42 @@ export default async function handler(req, res) {
         `👤 *Rango:* ${profile.rank}\n` +
         `🪙 *Tokens Teker:* ${profile.tokens_balance}\n` +
         `👥 *Referidos:* ${profile.referral_count}\n\n` +
-        `🔗 *Tu enlace único:*\n\`https://tucomunidad.vercel.app?ref=${profile.referral_code}\``;
+        `🔗 *Tu enlace único:*\n\`https://teker-network.vercel.app/?ref=${profile.referral_code}\``;
 
       await sendTelegramMessage(chatId, msg);
+    }
+  }
+
+  // 3. Comando /sugerir <producto> (Integración con Gemini IA)
+  else if (text.startsWith('/sugerir')) {
+    const product = text.replace('/sugerir', '').trim();
+
+    if (!product) {
+      await sendTelegramMessage(chatId, "❌ Indica qué producto quieres. Ej: `/sugerir Paneles solares 500W`");
+      return res.status(200).send('OK');
+    }
+
+    await sendTelegramMessage(chatId, "🤖 *Analizando producto con IA Teker...* Dame un momento.");
+
+    try {
+      const host = req.headers.host;
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      
+      const aiResponse = await fetch(`${protocol}://${host}/api/suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_name: product })
+      });
+
+      const aiData = await aiResponse.json();
+      
+      const analysisText = aiData.analysis || aiData.error || 'No se pudo obtener el análisis.';
+      const replyMsg = `🛍️ *Análisis de Compra Teker Network*\n\n*Producto:* ${product}\n\n${analysisText}`;
+      
+      await sendTelegramMessage(chatId, replyMsg);
+
+    } catch (e) {
+      await sendTelegramMessage(chatId, "⚠️ Hubo un error al procesar el análisis de la IA.");
     }
   }
 
