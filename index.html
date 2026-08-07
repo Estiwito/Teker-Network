@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teker Network - La red global de compras</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; text-align: center; color: #38bdf8; }
+    input, button { width: 100%; padding: 0.75rem; margin-top: 0.75rem; border-radius: 6px; border: 1px solid #334155; box-sizing: border-box; }
+    input { background: #0f172a; color: #fff; }
+    button { background: #0284c7; color: #fff; font-weight: bold; cursor: pointer; border: none; }
+    button:hover { background: #0369a1; }
+    .hidden { display: none; }
+    .stat-box { background: #0f172a; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #334155; }
+    .badge { font-weight: bold; color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Teker Network</h1>
+    <p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">Comunidad Global de Compras</p>
+
+    <!-- FORMULARIO DE REGISTRO/LOGIN -->
+    <div id="auth-form">
+      <input type="email" id="email" placeholder="Tu correo electrónico" required>
+      <input type="password" id="password" placeholder="Tu contraseña" required>
+      <button onclick="handleAuth('signup')">Unirme por 1€</button>
+      <button onclick="handleAuth('login')" style="background: transparent; color: #94a3b8; margin-top: 0.25rem;">Ya tengo cuenta</button>
+    </div>
+
+    <!-- PANEL DE USUARIO -->
+    <div id="user-panel" class="hidden">
+      <h3>Mi Cuenta</h3>
+      <div class="stat-box">
+        <p>Rango: <span id="user-rank" class="badge">-</span></p>
+        <p>Tokens: <span id="user-tokens">0</span> Tekers</p>
+        <p>Referidos: <span id="user-refs">0</span></p>
+      </div>
+
+      <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8;">Tu enlace para invitar:</p>
+      <input type="text" id="ref-link" readonly onclick="this.select()">
+      
+      <button onclick="supabaseClient.auth.signOut().then(() => location.reload())" style="background: #ef4444; margin-top: 1.5rem;">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <script>
+    // Configura aquí las llaves de tu proyecto en Supabase (Settings -> API)
+    const SUPABASE_URL = "https://tlkffcxvyudejeqoumpr.supabase.co/rest/v1/";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsa2ZmY3h2eXVkZWplcW91bXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjQ1NjIsImV4cCI6MjEwMTcwMDU2Mn0.2BZ73wjjhRyL1zj53l9BlfTZPtVjTnSt22zBfVxSWhg";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Capturar el código de referido de la URL (?ref=CODIGO)
+    const urlParams = new URLSearchParams(window.location.search);
+    const referredByCode = urlParams.get('ref');
+
+    async function handleAuth(type) {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      let result = type === 'signup' 
+        ? await supabaseClient.auth.signUp({ 
+            email, 
+            password, 
+            options: { data: { referred_by_code: referredByCode } } 
+          })
+        : await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (result.error) alert(result.error.message);
+      else loadDashboard();
+    }
+
+    async function loadDashboard() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) return;
+
+      document.getElementById('auth-form').classList.add('hidden');
+      document.getElementById('user-panel').classList.remove('hidden');
+
+      // Consultar datos del perfil
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        document.getElementById('user-rank').innerText = profile.rank;
+        document.getElementById('user-tokens').innerText = profile.tokens_balance;
+        document.getElementById('user-refs').innerText = profile.referral_count;
+        document.getElementById('ref-link').value = `${window.location.origin}?ref=${profile.referral_code}`;
+      }
+    }
+
+    // Verificar sesión al cargar la página
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session) loadDashboard();
+    });
+  </script>
+</body>
+</html>
