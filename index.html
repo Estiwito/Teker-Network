@@ -3,103 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teker Network - La red global de compras</title>
+  <title>Teker Network - Club de Compras Inteligente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-    .card { background: #1e293b; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; text-align: center; color: #38bdf8; }
-    input, button { width: 100%; padding: 0.75rem; margin-top: 0.75rem; border-radius: 6px; border: 1px solid #334155; box-sizing: border-box; }
-    input { background: #0f172a; color: #fff; }
-    button { background: #0284c7; color: #fff; font-weight: bold; cursor: pointer; border: none; }
-    button:hover { background: #0369a1; }
-    .hidden { display: none; }
-    .stat-box { background: #0f172a; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #334155; }
-    .badge { font-weight: bold; color: #f59e0b; }
-  </style>
 </head>
-<body>
+<body class="bg-slate-950 text-white min-h-screen font-sans">
 
-  <div class="card">
-    <h1>Teker Network</h1>
-    <p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">Comunidad Global de Compras</p>
+  <!-- Navbar -->
+  <header class="border-b border-slate-800 p-4 max-w-6xl mx-auto flex justify-between items-center">
+    <div class="text-2xl font-black text-amber-400 tracking-wider">TEKER<span class="text-white font-light">NETWORK</span></div>
+    <div class="bg-amber-500/10 text-amber-400 text-xs px-3 py-1.5 rounded-full border border-amber-500/20 font-bold uppercase tracking-wide">
+      🔥 Fundadores: Gratis (1.000 Plazas)
+    </div>
+  </header>
 
-    <!-- FORMULARIO DE REGISTRO/LOGIN -->
-    <div id="auth-form">
-      <input type="email" id="email" placeholder="Tu correo electrónico" required>
-      <input type="password" id="password" placeholder="Tu contraseña" required>
-      <button onclick="handleAuth('signup')">Unirme por 1€</button>
-      <button onclick="handleAuth('login')" style="background: transparent; color: #94a3b8; margin-top: 0.25rem;">Ya tengo cuenta</button>
+  <main class="max-w-4xl mx-auto px-4 py-12">
+    
+    <!-- Hero / Presentación -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-4">
+        Únete al Poder de Compra <span class="text-amber-400">Colectivo</span>
+      </h1>
+      <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+        Consigue precios directos de fábrica, acumula tokens por expandir la red y escala en la jerarquía Teker.
+      </p>
     </div>
 
-    <!-- PANEL DE USUARIO -->
-    <div id="user-panel" class="hidden">
-      <h3>Mi Cuenta</h3>
-      <div class="stat-box">
-        <p>Rango: <span id="user-rank" class="badge">-</span></p>
-        <p>Tokens: <span id="user-tokens">0</span> Tekers</p>
-        <p>Referidos: <span id="user-refs">0</span></p>
+    <!-- SECCIÓN 1: FORMULARIO DE REGISTRO (Si no ha iniciado sesión) -->
+    <div id="registerSection" class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md mx-auto shadow-2xl">
+      <h2 class="text-2xl font-bold mb-2 text-center">Registro de Fundador</h2>
+      <p class="text-slate-400 text-sm mb-6 text-center">Promoción activa: <strong class="text-emerald-400">0€ / Gratis</strong></p>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-2">Tu correo electrónico</label>
+          <input type="email" id="emailInput" placeholder="tu@email.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-amber-500 transition">
+        </div>
+
+        <div id="refNotice" class="hidden text-xs text-amber-400 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+          🔗 Te estás registrando mediante la invitación de un miembro de la red.
+        </div>
+
+        <button onclick="registerOrLogin()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 rounded-lg transition shadow-lg shadow-amber-500/20">
+          ENTRAR / REGISTRARME GRATIS
+        </button>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: PANEL DE USUARIO (Muestra la red, rango y link) -->
+    <div id="dashboardSection" class="hidden space-y-6">
+      
+      <!-- Ficha de bienvenida -->
+      <div class="bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/20 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <span class="text-xs text-amber-400 font-bold uppercase tracking-wider">Perfil de Miembro</span>
+          <h2 id="userEmailDisplay" class="text-2xl font-bold text-white">cargando...</h2>
+        </div>
+        <button onclick="logout()" class="text-xs text-slate-400 hover:text-white underline">Cerrar Sesión</button>
       </div>
 
-      <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8;">Tu enlace para invitar:</p>
-      <input type="text" id="ref-link" readonly onclick="this.select()">
-      
-      <button onclick="supabaseClient.auth.signOut().then(() => location.reload())" style="background: #ef4444; margin-top: 1.5rem;">Cerrar sesión</button>
+      <!-- Tarjetas de Estadísticas Privadas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Miembros en su red -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="text-3xl mb-1">👥</div>
+          <div id="networkCount" class="text-4xl font-black text-amber-400">0</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold mt-1">Miembros en tu Red</div>
+        </div>
+
+        <!-- Rango -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="text-3xl mb-1">👑</div>
+          <div id="userRank" class="text-2xl font-bold text-white">Ciudadano</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold mt-1">Tu Rango Teker</div>
+        </div>
+
+        <!-- Tokens -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="text-3xl mb-1">🪙</div>
+          <div id="tokensBalance" class="text-4xl font-black text-amber-400">100</div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold mt-1">Tokens TEKER</div>
+        </div>
+
+      </div>
+
+      <!-- Caja del Enlace Único de Invitación -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-1">🚀 Tu Enlace Personal de Invitación</h3>
+        <p class="text-slate-400 text-sm mb-4">
+          Comparte este enlace para invitar a nuevos fundadores a tu red. Cada persona que se registre aumentará el contador de tu red y tus tokens.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="text" id="refLinkInput" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-amber-400 font-mono text-sm focus:outline-none">
+          <button onclick="copyRefLink()" id="copyBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-3 rounded-lg transition whitespace-nowrap">
+            Copiar Enlace
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensaje de Privacidad Garantizada -->
+      <div class="text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+        <span>🔒 Privacidad Garantizada: Los datos personales (emails y teléfonos) de la red son 100% confidenciales.</span>
+      </div>
+
     </div>
-  </div>
+
+  </main>
 
   <script>
-    // Configura aquí las llaves de tu proyecto en Supabase (Settings -> API)
-    const SUPABASE_URL = "https://tlkffcxvyudejeqoumpr.supabase.co/rest/v1/";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsa2ZmY3h2eXVkZWplcW91bXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjQ1NjIsImV4cCI6MjEwMTcwMDU2Mn0.2BZ73wjjhRyL1zj53l9BlfTZPtVjTnSt22zBfVxSWhg";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Configuración de Supabase
+    const SUPABASE_URL = 'https://tlkffcxvyudejeqoumpr.supabase.co/rest/v1/'; // Configura tu URL
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsa2ZmY3h2eXVkZWplcW91bXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjQ1NjIsImV4cCI6MjEwMTcwMDU2Mn0.2BZ73wjjhRyL1zj53l9BlfTZPtVjTnSt22zBfVxSWhg'; // Configura tu Anon Key
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Capturar el código de referido de la URL (?ref=CODIGO)
-    const urlParams = new URLSearchParams(window.location.search);
-    const referredByCode = urlParams.get('ref');
+    let currentReferrerCode = null;
 
-    async function handleAuth(type) {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+    // Detectar si la URL trae un parámetro de referido (?ref=CODIGO)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentReferrerCode = urlParams.get('ref');
 
-      let result = type === 'signup' 
-        ? await supabaseClient.auth.signUp({ 
-            email, 
-            password, 
-            options: { data: { referred_by_code: referredByCode } } 
-          })
-        : await supabaseClient.auth.signInWithPassword({ email, password });
+      if (currentReferrerCode) {
+        document.getElementById('refNotice').classList.remove('hidden');
+      }
 
-      if (result.error) alert(result.error.message);
-      else loadDashboard();
+      // Si ya hay un email guardado en el navegador, cargar el panel directamente
+      const savedEmail = localStorage.getItem('teker_user_email');
+      if (savedEmail) {
+        loadUserProfile(savedEmail);
+      }
+    });
+
+    async function registerOrLogin() {
+      const email = document.getElementById('emailInput').value.trim().toLowerCase();
+      if (!email || !email.includes('@')) {
+        alert('Por favor, introduce un correo válido.');
+        return;
+      }
+
+      // 1. Buscar si la cuenta ya existe
+      let { data: profile } = await supabase.from('profiles').select('*').eq('email', email).single();
+
+      // 2. Si no existe, registrar nuevo usuario con su código único
+      if (!profile) {
+        const uniqueCode = 'TK' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        const newProfile = {
+          email: email,
+          referral_code: uniqueCode,
+          referred_by: currentReferrerCode || null,
+          referral_count: 0,
+          rank: 'Ciudadano',
+          tokens_balance: 100
+        };
+
+        const { data, error } = await supabase.from('profiles').insert([newProfile]).select().single();
+        if (error) {
+          alert('Error al registrar: ' + error.message);
+          return;
+        }
+        profile = data;
+
+        // Si venía recomendado por alguien, incrementar el contador del recomendador
+        if (currentReferrerCode) {
+          await incrementReferrerCount(currentReferrerCode);
+        }
+      }
+
+      // Guardar sesión local y mostrar panel
+      localStorage.setItem('teker_user_email', email);
+      loadUserProfile(email);
     }
 
-    async function loadDashboard() {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) return;
+    async function incrementReferrerCount(code) {
+      const { data: refProfile } = await supabase.from('profiles').select('*').eq('referral_code', code).single();
+      if (refProfile) {
+        const newCount = (refProfile.referral_count || 0) + 1;
+        
+        // Calcular nuevo rango según referidos
+        let newRank = 'Ciudadano';
+        if (newCount >= 50) newRank = 'Emperador';
+        else if (newCount >= 20) newRank = 'Conde';
+        else if (newCount >= 5) newRank = 'Barón';
 
-      document.getElementById('auth-form').classList.add('hidden');
-      document.getElementById('user-panel').classList.remove('hidden');
-
-      // Consultar datos del perfil
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        document.getElementById('user-rank').innerText = profile.rank;
-        document.getElementById('user-tokens').innerText = profile.tokens_balance;
-        document.getElementById('user-refs').innerText = profile.referral_count;
-        document.getElementById('ref-link').value = `${window.location.origin}?ref=${profile.referral_code}`;
+        await supabase.from('profiles').update({
+          referral_count: newCount,
+          rank: newRank,
+          tokens_balance: refProfile.tokens_balance + 50 // Recompensa de 50 tokens por referido
+        }).eq('referral_code', code);
       }
     }
 
-    // Verificar sesión al cargar la página
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      if (session) loadDashboard();
-    });
+    async function loadUserProfile(email) {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('email', email).single();
+      
+      if (profile) {
+        document.getElementById('registerSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+
+        document.getElementById('userEmailDisplay').innerText = profile.email;
+        document.getElementById('networkCount').innerText = profile.referral_count || 0;
+        document.getElementById('userRank').innerText = profile.rank || 'Ciudadano';
+        document.getElementById('tokensBalance').innerText = profile.tokens_balance || 100;
+
+        // Generar enlace personal único
+        const currentUrl = window.location.origin + window.location.pathname;
+        document.getElementById('refLinkInput').value = `${currentUrl}?ref=${profile.referral_code}`;
+      }
+    }
+
+    function copyRefLink() {
+      const linkInput = document.getElementById('refLinkInput');
+      linkInput.select();
+      document.execCommand('copy');
+
+      const btn = document.getElementById('copyBtn');
+      btn.innerText = '¡Copiado!';
+      btn.classList.replace('bg-amber-500', 'bg-emerald-500');
+
+      setTimeout(() => {
+        btn.innerText = 'Copiar Enlace';
+        btn.classList.replace('bg-emerald-500', 'bg-amber-500');
+      }, 2000);
+    }
+
+    function logout() {
+      localStorage.removeItem('teker_user_email');
+      location.reload();
+    }
   </script>
 </body>
 </html>
